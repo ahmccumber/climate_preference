@@ -333,9 +333,9 @@
                 <div class="tutorial-step">
                     <div class="step-number">1</div>
                     <div class="step-content">
-                        <h3>🎨 Use the Spray Tool</h3>
-                        <p>The spray tool starts enabled (ON). Hold down your mouse button and drag across areas you'd like to mark.</p>
-                        <p style="margin-top: 8px;"><strong>Toggle the spray tool ON/OFF</strong> using the button at the top. Turn it OFF to navigate and zoom without adding marks, then turn it back ON to continue spraying.</p>
+                        <h3>Use the Annotation Tool to Mark Desired Areas</h3>
+                        <p>The annotation tool starts enabled (ON). Hold down your mouse button and drag across areas you'd like to mark.</p>
+                        <p style="margin-top: 8px;"><strong>Toggle the annotation tool ON/OFF</strong> using the button at the top. Turn it OFF to navigate and zoom without adding marks, then turn it back ON to continue spraying.</p>
                     </div>
                 </div>
                 
@@ -343,25 +343,18 @@
                     <div class="step-number">2</div>
                     <div class="step-content">
                         <h3>🔍 Zoom to Adjust Precision</h3>
-                        <p><strong>Zoom out</strong> to mark broad regions quickly (the spray covers larger areas).</p>
-                        <p style="margin-top: 8px;"><strong>Zoom in</strong> for precise areas like specific neighborhoods or cities (the spray becomes more focused).</p>
-                        <p style="margin-top: 8px;">The spray tool automatically adjusts its radius based on your zoom level!</p>
+                        <p><strong>Zoom out</strong> to mark broad regions quickly (the tool covers larger areas).</p>
+                        <p style="margin-top: 8px;"><strong>Zoom in</strong> for precise areas like specific neighborhoods or cities (the tool becomes more focused).</p>
+                        <p style="margin-top: 8px;">The annotation tool automatically adjusts its radius based on your zoom level.</p>
                     </div>
                 </div>
+                
                 
                 <div class="tutorial-step">
                     <div class="step-number">3</div>
                     <div class="step-content">
-                        <h3>🗺️ View State and County Labels</h3>
-                        <p>State names appear when you zoom to level 6 or higher. County names appear at zoom level 8 and above. You can also hover over any area to see its name.</p>
-                    </div>
-                </div>
-                
-                <div class="tutorial-step">
-                    <div class="step-number">4</div>
-                    <div class="step-content">
                         <h3>✅ Review and Submit</h3>
-                        <p>Check the counter at the bottom to see how many points you've marked. Made a mistake? Use the "Undo Last Spray" button to remove your most recent marks.</p>
+                        <p>Check the counter at the bottom to see how many points you've marked. Use the "Undo Last Annotation" button to remove your most recent marks.</p>
                         <p style="margin-top: 8px;">When you're done, click "Submit My Selections" to continue with the survey. Need to start over? Use the "Clear All" button.</p>
                     </div>
                 </div>
@@ -377,17 +370,17 @@
     <div class="container">
         <div class="header">
             <h1>Climate Change and Geographic Preferences</h1>
-            <p>Please mark areas you view as safe and desirable given climate change considerations.</p>
+            <p>Please mark areas you view as safe and desirable places to live given climate change considerations.</p>
         </div>
         
         <div class="controls">
             <div class="control-group">
                 <button class="btn btn-primary active" id="sprayToggle">
-                    🎨 Spray Tool: ON
+                    🎨 annotation tool: ON
                 </button>
                 
                 <button class="btn btn-secondary" id="undoBtn" disabled>
-                    ↶ Undo Last Spray
+                    ↶ Undo Last Annotation
                 </button>
                 
                 <button class="btn btn-secondary" id="clearAll">Clear All</button>
@@ -452,7 +445,7 @@
         map.addLayer(sprayLayer);
         
         let isSpraying = false;
-        let sprayEnabled = true; // Track whether spray tool is active
+        let sprayEnabled = true; // Track whether annotation tool is active
         
         map.dragging.disable();
         map.scrollWheelZoom.enable();
@@ -743,7 +736,7 @@
                 this.classList.add('active');
                 this.classList.remove('btn-secondary');
                 this.classList.add('btn-primary');
-                this.textContent = '🎨 Spray Tool: ON';
+                this.textContent = '🎨 annotation tool: ON';
                 
                 map.dragging.disable();
                 map.getContainer().classList.add('spray-cursor');
@@ -753,7 +746,7 @@
                 this.classList.remove('active');
                 this.classList.remove('btn-primary');
                 this.classList.add('btn-secondary');
-                this.textContent = '🎨 Spray Tool: OFF';
+                this.textContent = '🎨 annotation tool: OFF';
                 
                 map.dragging.enable();
                 map.getContainer().classList.remove('spray-cursor');
