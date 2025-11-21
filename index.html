@@ -523,21 +523,33 @@
         
         // Add custom scroll zoom that requires Ctrl/Cmd key
         let zoomHintTimeout = null;
+        let lastZoomTime = 0;
         
         map.on('wheel', function(e) {
+            const evt = e.originalEvent;
+            
             // Only zoom if Ctrl (Windows/Linux) or Cmd (Mac) key is pressed
-            if (e.originalEvent.ctrlKey || e.originalEvent.metaKey) {
-                e.originalEvent.preventDefault();
+            if (evt.ctrlKey || evt.metaKey) {
+                evt.preventDefault();
+                evt.stopPropagation();
                 
                 // Hide hint if visible
                 document.getElementById('zoomHint').classList.remove('show');
                 
-                // Determine zoom direction
-                const delta = e.originalEvent.deltaY;
-                if (delta < 0) {
-                    map.zoomIn();
-                } else {
-                    map.zoomOut();
+                // Throttle zoom to prevent it from being too sensitive
+                const now = Date.now();
+                if (now - lastZoomTime < 50) {
+                    return; // Ignore if zooming too fast
+                }
+                lastZoomTime = now;
+                
+                // Determine zoom direction based on deltaY
+                // Negative deltaY = scroll up = zoom in
+                // Positive deltaY = scroll down = zoom out
+                if (evt.deltaY < 0) {
+                    map.zoomIn(0.5); // Use fractional zoom for smoother experience
+                } else if (evt.deltaY > 0) {
+                    map.zoomOut(0.5);
                 }
             } else {
                 // Show hint when user tries to scroll without modifier
