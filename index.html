@@ -19,18 +19,26 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background-color: #ffffff;
             overflow-x: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
         
         .container {
             width: 100%;
             margin: 0;
             background: white;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
         }
         
         .header {
             background: #2c3e50;
             color: white;
             padding: 20px;
+            flex-shrink: 0;
         }
         
         .header h1 {
@@ -47,6 +55,7 @@
             padding: 20px;
             background: #ecf0f1;
             border-bottom: 1px solid #ddd;
+            flex-shrink: 0;
         }
         
         .control-group {
@@ -64,6 +73,19 @@
             font-size: 14px;
             font-weight: 500;
             transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+        
+        .btn-primary.active {
+            background: #27ae60;
         }
         
         .btn-secondary {
@@ -95,15 +117,24 @@
             color: #155724;
         }
         
+        .map-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+        
         #map {
             width: 100%;
-            height: 700px;
+            flex: 1;
         }
         
         .info-box {
             padding: 20px;
             background: #e8f4f8;
             border-top: 1px solid #ddd;
+            flex-shrink: 0;
         }
         
         .stats {
@@ -395,22 +426,24 @@
             </div>
         </div>
         
-        <div id="map"></div>
-        
-        <div class="info-box">
-            <div class="stats">
-                <div class="stat-item">
-                    <div class="stat-value" id="sprayCount">0</div>
-                    <div class="stat-label">Points Marked</div>
+        <div class="map-container">
+            <div id="map"></div>
+            
+            <div class="info-box">
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="sprayCount">0</div>
+                        <div class="stat-label">Points Marked</div>
+                    </div>
                 </div>
-            </div>
-            
-            <button class="btn btn-success" id="submitBtn" style="width: 100%;">
-                Submit My Selections
-            </button>
-            
-            <div class="success-message" id="successMessage">
-                ✓ Your selections have been saved! You can now continue with the survey.
+                
+                <button class="btn btn-success" id="submitBtn" style="width: 100%;">
+                    Submit My Selections
+                </button>
+                
+                <div class="success-message" id="successMessage">
+                    ✓ Your selections have been saved! You can now continue with the survey.
+                </div>
             </div>
         </div>
     </div>
