@@ -350,6 +350,38 @@
         .success-message.show {
             display: block;
         }
+        
+        /* Zoom hint overlay */
+        .zoom-hint {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(44, 62, 80, 0.95);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        
+        .zoom-hint.show {
+            opacity: 1;
+        }
+        
+        .zoom-hint-key {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 0 3px;
+        }
     </style>
 </head>
 <body>
@@ -374,7 +406,8 @@
                     <div class="step-number">2</div>
                     <div class="step-content">
                         <h3>Zoom to Adjust Precision</h3>
-                        <p><strong>Zoom out</strong> to mark broad regions quickly (the tool covers larger areas).</p>
+                        <p><strong>To zoom:</strong> Hold Ctrl (or ⌘ on Mac) and scroll with your mouse or trackpad. You can also use the +/- buttons on the map.</p>
+                        <p style="margin-top: 8px;"><strong>Zoom out</strong> to mark broad regions quickly (the tool covers larger areas).</p>
                         <p style="margin-top: 8px;"><strong>Zoom in</strong> for precise areas like specific neighborhoods or cities (the tool becomes more focused).</p>
                         <p style="margin-top: 8px;">The annotation tool automatically adjusts its radius based on your zoom level.</p>
                     </div>
@@ -421,13 +454,16 @@
                 </button>
                 
                 <div class="mode-indicator" id="sprayInfo">
-                    Spray radius: <span id="sprayRadius">50</span>km | Hold mouse/touch to spray
+                    Spray radius: <span id="sprayRadius">50</span>km | Hold mouse/touch to spray | Hold Ctrl (⌘ on Mac) + scroll to zoom
                 </div>
             </div>
         </div>
         
         <div class="map-container">
             <div id="map"></div>
+            <div class="zoom-hint" id="zoomHint">
+                Hold <span class="zoom-hint-key">Ctrl</span> (or <span class="zoom-hint-key">⌘</span>) + scroll to zoom
+            </div>
             
             <div class="info-box">
                 <div class="stats">
@@ -481,7 +517,46 @@
         let sprayEnabled = true; // Track whether spray tool is active
         
         map.dragging.disable();
-        map.scrollWheelZoom.enable();
+        
+        // Disable default scroll zoom
+        map.scrollWheelZoom.disable();
+        
+        // Add custom scroll zoom that requires Ctrl/Cmd key
+        let zoomHintTimeout = null;
+        
+        map.on('wheel', function(e) {
+            // Only zoom if Ctrl (Windows/Linux) or Cmd (Mac) key is pressed
+            if (e.originalEvent.ctrlKey || e.originalEvent.metaKey) {
+                e.originalEvent.preventDefault();
+                
+                // Hide hint if visible
+                document.getElementById('zoomHint').classList.remove('show');
+                
+                // Determine zoom direction
+                const delta = e.originalEvent.deltaY;
+                if (delta < 0) {
+                    map.zoomIn();
+                } else {
+                    map.zoomOut();
+                }
+            } else {
+                // Show hint when user tries to scroll without modifier
+                const hint = document.getElementById('zoomHint');
+                hint.classList.add('show');
+                
+                // Clear previous timeout
+                if (zoomHintTimeout) {
+                    clearTimeout(zoomHintTimeout);
+                }
+                
+                // Hide hint after 2 seconds
+                zoomHintTimeout = setTimeout(function() {
+                    hint.classList.remove('show');
+                }, 2000);
+            }
+            // If no modifier key, allow normal page scrolling (don't preventDefault)
+        });
+        
         map.getContainer().classList.add('spray-cursor');
         
         async function loadStates() {
