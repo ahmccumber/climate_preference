@@ -35,7 +35,7 @@
         }
         
         .header {
-            background: #2c3e50;
+            background: #27ae60;
             color: white;
             padding: 20px;
             flex-shrink: 0;
@@ -213,7 +213,7 @@
         }
         
         .tutorial-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
             color: white;
             padding: 30px;
             border-radius: 12px 12px 0 0;
@@ -249,7 +249,7 @@
             flex-shrink: 0;
             width: 36px;
             height: 36px;
-            background: #667eea;
+            background: #27ae60;
             color: white;
             border-radius: 50%;
             display: flex;
@@ -294,7 +294,7 @@
         
         .btn-tutorial {
             padding: 12px 30px;
-            background: #667eea;
+            background: #27ae60;
             color: white;
             border: none;
             border-radius: 6px;
@@ -305,9 +305,9 @@
         }
         
         .btn-tutorial:hover {
-            background: #5568d3;
+            background: #229954;
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 4px 12px rgba(39, 174, 96, 0.4);
         }
         
         /* Label tooltips */
@@ -357,7 +357,7 @@
     <div class="tutorial-overlay" id="tutorialOverlay">
         <div class="tutorial-modal">
             <div class="tutorial-header">
-                <p>Please follow these instructions to annotate this map of the United States. You will use an annotation tool to mark areas you view as safe and desirable places to live, taking climate change-related concerns into account.</p>
+                <p>Please follow these instructions to annotate this map of the continental United States. You will use an annotation tool to mark areas in the lower 48 states you view as safe and desirable places to live, taking climate change-related concerns into account.</p>
             </div>
             
             <div class="tutorial-content">
@@ -402,7 +402,7 @@
     <div class="container">
         <div class="header">
             <h1>Climate Change and Geographic Preferences</h1>
-            <p>Please mark areas you view as safe and desirable places to live given climate change considerations.</p>
+            <p>Please mark areas in the continental United States (lower 48 states) that you view as safe and desirable places to live given climate change considerations.</p>
         </div>
         
         <div class="controls">
@@ -524,6 +524,45 @@
                     });
                 }
             }).addTo(map);
+            
+            // Create an inverse mask to gray out everything outside the lower 48
+            // First, create the outer boundary (world bounds)
+            const worldBounds = [
+                [85, -180],   // Northwest corner
+                [85, 180],    // Northeast corner
+                [-85, 180],   // Southeast corner
+                [-85, -180],  // Southwest corner
+                [85, -180]    // Close the polygon
+            ];
+            
+            // Collect all lower 48 state coordinates as holes
+            const stateHoles = [];
+            stateLayer.eachLayer(function(layer) {
+                const coords = layer.feature.geometry.coordinates;
+                
+                // Handle MultiPolygon (states with multiple parts)
+                if (layer.feature.geometry.type === 'MultiPolygon') {
+                    coords.forEach(polygon => {
+                        const hole = polygon[0].map(coord => [coord[1], coord[0]]);
+                        stateHoles.push(hole);
+                    });
+                } else if (layer.feature.geometry.type === 'Polygon') {
+                    const hole = coords[0].map(coord => [coord[1], coord[0]]);
+                    stateHoles.push(hole);
+                }
+            });
+            
+            // Create the mask polygon with holes
+            const maskPolygon = L.polygon([worldBounds, ...stateHoles], {
+                color: 'transparent',
+                fillColor: '#808080',
+                fillOpacity: 0.5,
+                interactive: false,
+                pane: 'overlayPane'
+            }).addTo(map);
+            
+            // Make sure the mask stays below other layers
+            maskPolygon.bringToBack();
         }
         
         async function loadCounties() {
@@ -697,6 +736,13 @@
         let stateLabelMarkers = [];
         let countyLabelMarkers = [];
         
+        // List of non-contiguous states/territories to exclude from labeling
+        const nonContiguousStates = [
+            'Alaska', 'Hawaii', 
+            'Puerto Rico', 'U.S. Virgin Islands', 'American Samoa', 
+            'Guam', 'Northern Mariana Islands'
+        ];
+        
         function updatePermanentLabels() {
             const zoom = map.getZoom();
             
@@ -707,8 +753,14 @@
             
             if (zoom >= 6 && stateLayer) {
                 stateLayer.eachLayer(function(layer) {
-                    const center = layer.getBounds().getCenter();
                     const stateName = layer.feature.properties.name;
+                    
+                    // Skip labels for non-contiguous states/territories
+                    if (nonContiguousStates.includes(stateName)) {
+                        return;
+                    }
+                    
+                    const center = layer.getBounds().getCenter();
                     
                     const label = L.marker(center, {
                         icon: L.divIcon({
