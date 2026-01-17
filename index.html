@@ -907,13 +907,14 @@
                     type: 'mapData',
                     data: selectionData,
                     dataString: dataString,
-                    totalPoints: totalSelections
+                    totalPoints: totalSelections,
+                    autoAdvance: true  // Signal to Qualtrics to advance to next question
                 }, '*');
                 
                 // Show success message
                 document.getElementById('successMessage').classList.add('show');
                 
-                // Optionally disable further editing
+                // Disable further editing
                 document.getElementById('submitBtn').disabled = true;
                 document.getElementById('submitBtn').textContent = 'Selections Submitted ✓';
                 document.getElementById('submitBtn').style.background = '#95a5a6';
