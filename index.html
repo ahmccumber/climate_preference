@@ -894,8 +894,8 @@
         document.getElementById('submitBtn').addEventListener('click', function() {
             const totalSelections = selectionData.sprayedPoints.length;
             
-            if (totalSelections === 0) {
-                alert('Please mark at least one area before submitting.');
+            if (totalSelections < 50) {
+                alert('Please mark add at least 50 points to the map before submitting. You currently have ' + totalSelections + ' points.');
                 return;
             }
             
