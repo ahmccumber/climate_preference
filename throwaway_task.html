@@ -418,7 +418,7 @@
                     <ul>
                         <li>Click wherever is convenient - <strong>location does not matter</strong></li>
                         <li>Don't spend time thinking about geography</li>
-                        <li>You can stop once you have added at least the minimum 50 points</li>
+                        <li>Just add points until you reach 50 as quickly as possible</li>
                         <li>This helps us establish a baseline for comparison</li>
                     </ul>
                 </div>
@@ -480,20 +480,25 @@
             maxBoundsViscosity: 1.0
         });
         
-        // Add base map layer
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors',
-            bounds: [[24.396308, -125.0], [49.384358, -66.93457]]
+        // Add base map layer - CartoDB Light
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 20
         }).addTo(map);
         
         // Spray mode variables
-        let sprayEnabled = false;
+        let sprayEnabled = true;
         let isSpraying = false;
         let sprayInterval = null;
         let sprayLayer = L.layerGroup().addTo(map);
         let sprayPointLayers = [];
         let spraySessions = []; // Track spray sessions for undo
         let currentSession = null;
+        
+        // Start with annotation tool enabled
+        map.dragging.disable();
+        map.scrollWheelZoom.disable();
+        map.getContainer().classList.add('spray-cursor');
         
         // Selection data structure
         let selectionData = {
@@ -808,6 +813,13 @@
                 }
             }
         });
+        
+        // Initialize button state
+        document.getElementById('sprayToggle').classList.add('active');
+        document.getElementById('sprayToggle').classList.remove('btn-secondary');
+        document.getElementById('sprayToggle').classList.add('btn-primary');
+        document.getElementById('sprayToggle').textContent = 'Annotation Tool: ON';
+        document.getElementById('sprayInfo').style.display = 'block';
         
         document.getElementById('clearAll').addEventListener('click', function() {
             if (confirm('Are you sure you want to clear all selections?')) {
