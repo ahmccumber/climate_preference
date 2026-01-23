@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Completion Task</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #ffffff;
+            overflow-x: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .container {
+            width: 100%;
+            margin: 0;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: #95a5a6;
+            color: white;
+            padding: 20px;
+            flex-shrink: 0;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .controls {
+            padding: 20px;
+            background: #ecf0f1;
+            border-bottom: 1px solid #ddd;
+            flex-shrink: 0;
+        }
+        
+        .control-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #95a5a6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #7f8c8d;
+        }
+        
+        .btn-primary.active {
+            background: #27ae60;
+        }
+        
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+        
+        .btn-success {
+            background: #27ae60;
+            color: white;
+            font-size: 16px;
+            padding: 12px 30px;
+        }
+        
+        .btn-success:hover {
+            background: #229954;
+        }
+        
+        .mode-indicator {
+            padding: 8px 16px;
+            background: #d4edda;
+            border: 1px solid #28a745;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #155724;
+        }
+        
+        .map-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+        
+        #map {
+            width: 100%;
+            flex: 1;
+        }
+        
+        .info-box {
+            padding: 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #ddd;
+            flex-shrink: 0;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 4px;
+        }
+        
+        .stat-item {
+            flex: 1;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #95a5a6;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+        }
+        
+        .spray-cursor {
+            cursor: crosshair !important;
+        }
+        
+        .spray-cursor * {
+            cursor: crosshair !important;
+        }
+        
+        .spray-point {
+            border-radius: 50%;
+            background: rgba(149, 165, 166, 0.6);
+            border: 2px solid rgba(127, 140, 141, 0.8);
+        }
+        
+        /* Tutorial styles */
+        .tutorial-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .tutorial-modal {
+            background: white;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            animation: slideUp 0.3s;
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .tutorial-header {
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px 12px 0 0;
+            text-align: center;
+        }
+        
+        .tutorial-header h2 {
+            margin: 0 0 10px 0;
+            font-size: 28px;
+        }
+        
+        .tutorial-header p {
+            margin: 0;
+            opacity: 0.95;
+            font-size: 16px;
+        }
+        
+        .tutorial-content {
+            padding: 30px;
+        }
+        
+        .tutorial-step {
+            margin-bottom: 30px;
+            display: flex;
+            gap: 20px;
+        }
+        
+        .tutorial-step:last-child {
+            margin-bottom: 0;
+        }
+        
+        .step-number {
+            flex-shrink: 0;
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .step-content h3 {
+            margin: 0 0 8px 0;
+            color: #2c3e50;
+            font-size: 18px;
+        }
+        
+        .step-content p {
+            margin: 0;
+            color: #7f8c8d;
+            line-height: 1.6;
+        }
+        
+        .tutorial-footer {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            display: flex;
+            justify-content: center;
+        }
+        
+        .spray-info {
+            display: none;
+            padding: 15px;
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 4px;
+            margin-top: 15px;
+            color: #856404;
+        }
+        
+        .spray-info strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .success-message {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            text-align: center;
+            z-index: 9999;
+        }
+        
+        .success-message.show {
+            display: block;
+            animation: slideUp 0.3s;
+        }
+        
+        .success-message h3 {
+            color: #27ae60;
+            margin: 0 0 10px 0;
+        }
+        
+        .success-message p {
+            color: #7f8c8d;
+            margin: 0;
+        }
+        
+        .instruction-highlight {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .instruction-highlight h3 {
+            color: #856404;
+            margin: 0 0 10px 0;
+            font-size: 18px;
+        }
+        
+        .instruction-highlight p {
+            color: #856404;
+            margin: 0;
+            line-height: 1.6;
+        }
+        
+        .instruction-highlight ul {
+            margin: 10px 0 0 20px;
+            color: #856404;
+        }
+        
+        .instruction-highlight li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Quick Completion Task - No Thought Required</h1>
+            <p>Simply add points anywhere on the map to reach the minimum and proceed</p>
+        </div>
+        
+        <!-- Controls -->
+        <div class="controls">
+            <div class="control-group">
+                <button id="sprayToggle" class="btn btn-secondary">Annotation Tool: OFF</button>
+                <button id="clearAll" class="btn btn-secondary">Clear All</button>
+                <button id="undoBtn" class="btn btn-secondary" disabled>Undo Last</button>
+                <button id="helpBtn" class="btn btn-secondary">Help</button>
+                <div class="mode-indicator">
+                    Spray Radius: <span id="sprayRadius">2.0km</span>
+                </div>
+            </div>
+            
+            <div id="sprayInfo" class="spray-info">
+                <strong>⚡ Annotation Tool Active</strong>
+                Hold your cursor down anywhere on the map - location doesn't matter. Just add points until you reach 50.
+            </div>
+        </div>
+        
+        <!-- Map Container -->
+        <div class="map-container">
+            <div id="map"></div>
+        </div>
+        
+        <!-- Info Box -->
+        <div class="info-box">
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalCount">0</div>
+                    <div class="stat-label">Total Points Marked</div>
+                </div>
+            </div>
+            
+            <div style="text-align: center;">
+                <button id="submitBtn" class="btn btn-success">Submit Selections</button>
+                <p style="margin-top: 10px; color: #7f8c8d; font-size: 13px;">
+                    Minimum 50 points required to continue
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tutorial Overlay -->
+    <div id="tutorialOverlay" class="tutorial-overlay">
+        <div class="tutorial-modal">
+            <div class="tutorial-header">
+                <h2>⚡ Quick Instructions</h2>
+                <p>This is a practice task - complete it as quickly as possible</p>
+            </div>
+            
+            <div class="tutorial-content">
+                <div class="instruction-highlight">
+                    <h3>🎯 Your Task: Generate Random Data</h3>
+                    <p><strong>Please complete this task WITHOUT thinking carefully about where you place points.</strong></p>
+                    <p style="margin-top: 10px;">This is a calibration exercise to help us understand what random clicking patterns look like. We need you to:</p>
+                    <ul>
+                        <li>Click wherever is convenient - <strong>location does not matter</strong></li>
+                        <li>Don't spend time thinking about geography</li>
+                        <li>Just add points until you reach 50 as quickly as possible</li>
+                        <li>This helps us establish a baseline for comparison</li>
+                    </ul>
+                </div>
+                
+                <div class="tutorial-step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Turn On the Annotation Tool</h3>
+                        <p>Click "Annotation Tool: OFF" to enable marking mode.</p>
+                    </div>
+                </div>
+                
+                <div class="tutorial-step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>Click Anywhere - Quickly</h3>
+                        <p>Hold your cursor down anywhere on the map. Don't think about where - just click in one or two spots until you hit 50 points.</p>
+                    </div>
+                </div>
+                
+                <div class="tutorial-step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Submit and Continue</h3>
+                        <p>Once you reach 50 points, click "Submit Selections" and move on to the next task.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tutorial-footer">
+                <button id="tutorialStart" class="btn btn-success">Got It - Start Quickly!</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Success Message -->
+    <div id="successMessage" class="success-message">
+        <h3>✓ Selections Submitted Successfully!</h3>
+        <p>Your data has been recorded. Moving to next question...</p>
+    </div>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        // Check if embedded in iframe (Qualtrics)
+        const isEmbedded = window.self !== window.top;
+        
+        // Initialize map centered on continental US
+        const map = L.map('map', {
+            center: [39.8283, -98.5795],
+            zoom: 5,
+            minZoom: 4,
+            maxZoom: 11,
+            maxBounds: [
+                [24.396308, -125.0],
+                [49.384358, -66.93457]
+            ],
+            maxBoundsViscosity: 1.0
+        });
+        
+        // Add base map layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            bounds: [[24.396308, -125.0], [49.384358, -66.93457]]
+        }).addTo(map);
+        
+        // Spray mode variables
+        let sprayEnabled = false;
+        let isSpraying = false;
+        let sprayInterval = null;
+        let sprayLayer = L.layerGroup().addTo(map);
+        let sprayPointLayers = [];
+        let spraySessions = []; // Track spray sessions for undo
+        let currentSession = null;
+        
+        // Selection data structure
+        let selectionData = {
+            sprayedPoints: [],
+            timestamp: new Date().toISOString()
+        };
+        
+        // Load state boundaries
+        let stateLayer = null;
+        function loadStates() {
+            fetch('https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json')
+                .then(response => response.json())
+                .then(data => {
+                    stateLayer = L.geoJSON(data, {
+                        style: {
+                            fillColor: '#ffffff',
+                            fillOpacity: 0,
+                            color: '#666',
+                            weight: 2
+                        },
+                        filter: function(feature) {
+                            const nonContiguous = ['Alaska', 'Hawaii', 'Puerto Rico'];
+                            return !nonContiguous.includes(feature.properties.name);
+                        }
+                    }).addTo(map);
+                    
+                    updatePermanentLabels();
+                });
+        }
+        
+        // Load county boundaries
+        let countyLayer = null;
+        function loadCounties() {
+            fetch('https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json')
+                .then(response => response.json())
+                .then(data => {
+                    countyLayer = L.geoJSON(data, {
+                        style: {
+                            fillColor: '#ffffff',
+                            fillOpacity: 0,
+                            color: '#999',
+                            weight: 0.5
+                        }
+                    });
+                    
+                    map.on('zoomend', function() {
+                        const zoom = map.getZoom();
+                        if (zoom >= 7 && !map.hasLayer(countyLayer)) {
+                            countyLayer.addTo(map);
+                        } else if (zoom < 7 && map.hasLayer(countyLayer)) {
+                            map.removeLayer(countyLayer);
+                        }
+                    });
+                });
+        }
+        
+        // Calculate spray radius based on zoom
+        function getSprayRadius() {
+            const zoom = map.getZoom();
+            const baseRadius = 2000;
+            return baseRadius * Math.pow(0.7, zoom - 5);
+        }
+        
+        // Add spray points
+        function addSprayPoint(latlng) {
+            const radius = getSprayRadius();
+            const angle = Math.random() * 2 * Math.PI;
+            const distance = Math.random() * radius;
+            
+            const offsetLat = (distance * Math.cos(angle)) / 111320;
+            const offsetLng = (distance * Math.sin(angle)) / (111320 * Math.cos(latlng.lat * Math.PI / 180));
+            
+            const newLat = latlng.lat + offsetLat;
+            const newLng = latlng.lng + offsetLng;
+            const newLatLng = L.latLng(newLat, newLng);
+            
+            if (!map.getBounds().contains(newLatLng)) {
+                return;
+            }
+            
+            const pointSize = Math.max(3, 8 - (map.getZoom() - 5));
+            const marker = L.circleMarker(newLatLng, {
+                radius: pointSize,
+                className: 'spray-point',
+                interactive: false
+            }).addTo(sprayLayer);
+            
+            sprayPointLayers.push(marker);
+            
+            const pointData = {
+                lat: newLatLng.lat,
+                lng: newLatLng.lng,
+                timestamp: new Date().toISOString()
+            };
+            
+            selectionData.sprayedPoints.push(pointData);
+            
+            if (currentSession) {
+                currentSession.push({
+                    layer: marker,
+                    data: pointData
+                });
+            }
+            
+            updateDisplay();
+        }
+        
+        function startSpraying(latlng) {
+            if (!sprayEnabled || isSpraying) return;
+            
+            isSpraying = true;
+            currentSession = [];
+            
+            addSprayPoint(latlng);
+            
+            sprayInterval = setInterval(() => {
+                if (isSpraying) {
+                    const currentLatLng = map.mouseEventToLatLng(lastMouseEvent);
+                    addSprayPoint(currentLatLng);
+                }
+            }, 50);
+        }
+        
+        function stopSpraying() {
+            if (!isSpraying) return;
+            
+            isSpraying = false;
+            
+            if (sprayInterval) {
+                clearInterval(sprayInterval);
+                sprayInterval = null;
+            }
+            
+            if (currentSession && currentSession.length > 0) {
+                spraySessions.push(currentSession);
+                document.getElementById('undoBtn').disabled = false;
+            }
+            currentSession = null;
+        }
+        
+        let lastMouseEvent = null;
+        
+        map.on('mousedown', function(e) {
+            if (sprayEnabled) {
+                lastMouseEvent = e.originalEvent;
+                startSpraying(e.latlng);
+            }
+        });
+        
+        map.on('mouseup', function(e) {
+            if (sprayEnabled) {
+                stopSpraying();
+            }
+        });
+        
+        map.on('mousemove', function(e) {
+            if (sprayEnabled && isSpraying) {
+                lastMouseEvent = e.originalEvent;
+            }
+        });
+        
+        map.on('mouseout', function(e) {
+            if (sprayEnabled && isSpraying) {
+                stopSpraying();
+            }
+        });
+        
+        function clearAllSelections() {
+            sprayLayer.clearLayers();
+            sprayPointLayers = [];
+            spraySessions = [];
+            currentSession = null;
+            
+            selectionData.sprayedPoints = [];
+            
+            document.getElementById('undoBtn').disabled = true;
+            
+            updateDisplay();
+        }
+        
+        function updateDisplay() {
+            const totalCount = selectionData.sprayedPoints.length;
+            
+            document.getElementById('totalCount').textContent = totalCount;
+            
+            const submitBtn = document.getElementById('submitBtn');
+            if (totalCount >= 50) {
+                submitBtn.disabled = false;
+                submitBtn.style.background = '#27ae60';
+            } else {
+                submitBtn.disabled = true;
+                submitBtn.style.background = '#95a5a6';
+            }
+        }
+        
+        map.on('zoomend', function() {
+            const radius = getSprayRadius();
+            const displayRadius = radius >= 1000 ? 
+                (radius / 1000).toFixed(1) + 'km' : 
+                radius.toFixed(0) + 'm';
+            document.getElementById('sprayRadius').textContent = displayRadius;
+            
+            updatePermanentLabels();
+        });
+        
+        let stateLabelMarkers = [];
+        let countyLabelMarkers = [];
+        
+        const nonContiguousStates = [
+            'Alaska', 'Hawaii', 
+            'Puerto Rico', 'U.S. Virgin Islands', 'American Samoa', 
+            'Guam', 'Northern Mariana Islands'
+        ];
+        
+        function updatePermanentLabels() {
+            const zoom = map.getZoom();
+            
+            stateLabelMarkers.forEach(marker => map.removeLayer(marker));
+            countyLabelMarkers.forEach(marker => map.removeLayer(marker));
+            stateLabelMarkers = [];
+            countyLabelMarkers = [];
+            
+            if (zoom >= 6 && stateLayer) {
+                stateLayer.eachLayer(function(layer) {
+                    const stateName = layer.feature.properties.name;
+                    
+                    if (nonContiguousStates.includes(stateName)) {
+                        return;
+                    }
+                    
+                    const center = layer.getBounds().getCenter();
+                    
+                    const label = L.marker(center, {
+                        icon: L.divIcon({
+                            className: 'permanent-state-label',
+                            html: `<div style="
+                                font-weight: 600;
+                                font-size: ${zoom >= 7 ? '12px' : '10px'};
+                                color: #2c3e50;
+                                text-shadow: 1px 1px 2px white, -1px -1px 2px white, 1px -1px 2px white, -1px 1px 2px white;
+                                pointer-events: none;
+                                white-space: nowrap;
+                                text-align: center;
+                            ">${stateName}</div>`,
+                            iconSize: [100, 20],
+                            iconAnchor: [50, 10]
+                        }),
+                        interactive: false
+                    });
+                    
+                    label.addTo(map);
+                    stateLabelMarkers.push(label);
+                });
+            }
+            
+            if (zoom >= 8 && countyLayer) {
+                countyLayer.eachLayer(function(layer) {
+                    const center = layer.getBounds().getCenter();
+                    const countyName = layer.feature.properties.NAME || '';
+                    
+                    if (countyName) {
+                        const label = L.marker(center, {
+                            icon: L.divIcon({
+                                className: 'permanent-county-label',
+                                html: `<div style="
+                                    font-weight: 500;
+                                    font-size: ${zoom >= 9 ? '10px' : '9px'};
+                                    color: #34495e;
+                                    text-shadow: 0.5px 0.5px 1px white, -0.5px -0.5px 1px white;
+                                    pointer-events: none;
+                                    white-space: nowrap;
+                                    text-align: center;
+                                    opacity: ${zoom >= 9 ? '0.9' : '0.7'};
+                                ">${countyName}</div>`,
+                                iconSize: [80, 16],
+                                iconAnchor: [40, 8]
+                            }),
+                            interactive: false
+                        });
+                        
+                        label.addTo(map);
+                        countyLabelMarkers.push(label);
+                    }
+                });
+            }
+        }
+        
+        document.getElementById('sprayToggle').addEventListener('click', function() {
+            sprayEnabled = !sprayEnabled;
+            
+            if (sprayEnabled) {
+                this.classList.add('active');
+                this.classList.remove('btn-secondary');
+                this.classList.add('btn-primary');
+                this.textContent = 'Annotation Tool: ON';
+                
+                map.dragging.disable();
+                map.getContainer().classList.add('spray-cursor');
+                document.getElementById('sprayInfo').style.display = 'block';
+            } else {
+                this.classList.remove('active');
+                this.classList.remove('btn-primary');
+                this.classList.add('btn-secondary');
+                this.textContent = 'Annotation Tool: OFF';
+                
+                map.dragging.enable();
+                map.getContainer().classList.remove('spray-cursor');
+                document.getElementById('sprayInfo').style.display = 'none';
+                
+                if (isSpraying) {
+                    stopSpraying();
+                }
+            }
+        });
+        
+        document.getElementById('clearAll').addEventListener('click', function() {
+            if (confirm('Are you sure you want to clear all selections?')) {
+                clearAllSelections();
+            }
+        });
+        
+        document.getElementById('undoBtn').addEventListener('click', function() {
+            if (spraySessions.length === 0) return;
+            
+            const lastSession = spraySessions.pop();
+            
+            lastSession.forEach(function(point) {
+                sprayLayer.removeLayer(point.layer);
+                
+                const layerIndex = sprayPointLayers.indexOf(point.layer);
+                if (layerIndex > -1) {
+                    sprayPointLayers.splice(layerIndex, 1);
+                }
+                
+                const dataIndex = selectionData.sprayedPoints.findIndex(p => 
+                    p.lat === point.data.lat && p.lng === point.data.lng
+                );
+                if (dataIndex > -1) {
+                    selectionData.sprayedPoints.splice(dataIndex, 1);
+                }
+            });
+            
+            if (spraySessions.length === 0) {
+                this.disabled = true;
+            }
+            
+            updateDisplay();
+        });
+        
+        document.getElementById('submitBtn').addEventListener('click', function() {
+            const totalSelections = selectionData.sprayedPoints.length;
+            
+            if (totalSelections === 0) {
+                alert('Please mark at least one area before submitting.');
+                return;
+            }
+            
+            const dataString = JSON.stringify(selectionData);
+            
+            if (isEmbedded) {
+                window.parent.postMessage({
+                    type: 'mapData',
+                    data: selectionData,
+                    dataString: dataString,
+                    totalPoints: totalSelections,
+                    autoAdvance: true
+                }, '*');
+                
+                document.getElementById('successMessage').classList.add('show');
+                
+                document.getElementById('submitBtn').disabled = true;
+                document.getElementById('submitBtn').textContent = 'Selections Submitted ✓';
+                document.getElementById('submitBtn').style.background = '#95a5a6';
+            } else {
+                alert('Data ready!\n\nTotal points marked: ' + totalSelections + '\n\nIn Qualtrics, this data will be automatically saved.');
+                console.log('Selection data:', selectionData);
+            }
+        });
+        
+        function closeTutorial() {
+            const overlay = document.getElementById('tutorialOverlay');
+            overlay.style.animation = 'fadeOut 0.3s';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 300);
+        }
+        
+        function showTutorial() {
+            const overlay = document.getElementById('tutorialOverlay');
+            overlay.style.display = 'flex';
+            overlay.style.animation = 'fadeIn 0.3s';
+        }
+        
+        document.getElementById('tutorialStart').addEventListener('click', closeTutorial);
+        document.getElementById('helpBtn').addEventListener('click', showTutorial);
+        
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeOut {
+                from { opacity: 1; }
+                to { opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        loadStates();
+        loadCounties();
+        updateDisplay();
+        
+        const radius = getSprayRadius();
+        const displayRadius = radius >= 1000 ? 
+            (radius / 1000).toFixed(1) + 'km' : 
+            radius.toFixed(0) + 'm';
+        document.getElementById('sprayRadius').textContent = displayRadius;
+    </script>
+</body>
+</html>
